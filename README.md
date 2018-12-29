@@ -45,7 +45,8 @@ df <- read.csv("train.csv")
 head(df)
 
 # Mirando los nombres de columnas del dataframe y los tipos de variables
-nrow(df)
+print(paste("We are evaluating", nrow(df), "rows of code"))
+print("Column's names: ")
 colnames(df)
 sapply(df,class)
 str(df)
@@ -67,8 +68,8 @@ summary(df)
 
 
 
-
-891
+    [1] "We are evaluating 891 rows of code"
+    [1] "Column's names: "
 
 
 
@@ -169,11 +170,249 @@ summary(df)
      (Other)    :186           
 
 
+Ahora que tenemos un poco más de información sobre el dataset, detectamos que algunas de las columnas no aportan mucho para el tipo de conocimiento que necesitamos recolectar. Por ejemplo, el número del *ticket* de cada persona es bastante irrelevante para extraer un modelo y predecir si la persona ha sobrevivido o no. Dicho, con el intuito de obtener un modelo significativo, he elegido los siguientes atributos para el analisis:
+- *Survived*
+- *Pclass*
+- *Name*
+- *Sex*
+- *Age*
+
+Queda claro que el atributo **Name** tampoco es relevante, pero mantuve por si acaso necesito explicar o hacer alguna comparación de pasajeros (será más sencillo identificar las personas por sus nombres). 
+
+Definidos los atributos, antes de seguir para el próximo ejercício, hago la selección de los datos que vamos a trabajar abajo.
+
+
+```R
+df <- df[,2:6] 
+head(df)
+```
+
+
+<table>
+<thead><tr><th scope=col>Survived</th><th scope=col>Pclass</th><th scope=col>Name</th><th scope=col>Sex</th><th scope=col>Age</th></tr></thead>
+<tbody>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Braund, Mr. Owen Harris                            </td><td>male                                               </td><td>22                                                 </td></tr>
+	<tr><td>1                                                  </td><td>1                                                  </td><td>Cumings, Mrs. John Bradley (Florence Briggs Thayer)</td><td>female                                             </td><td>38                                                 </td></tr>
+	<tr><td>1                                                  </td><td>3                                                  </td><td>Heikkinen, Miss. Laina                             </td><td>female                                             </td><td>26                                                 </td></tr>
+	<tr><td>1                                                  </td><td>1                                                  </td><td>Futrelle, Mrs. Jacques Heath (Lily May Peel)       </td><td>female                                             </td><td>35                                                 </td></tr>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Allen, Mr. William Henry                           </td><td>male                                               </td><td>35                                                 </td></tr>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Moran, Mr. James                                   </td><td>male                                               </td><td>NA                                                 </td></tr>
+</tbody>
+</table>
+
+
+
 ## 3. Limpieza de los datos
 
 ### 3.1. ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?
 
+
+```R
+# Como resultado del comando abajo, podemos ver que solamente Age tiene elementos NA
+unlist(lapply(df, function(x) any(is.na(x))))
+
+# Abajo comentaré las aproximaciones posibles para el escenario y la adoptada              
+df_no_NA <- df[rowSums(is.na(df)) == 0,]
+nrow(df_no_NA)
+options(warn=-1)             
+for(i in 1:ncol(df)){
+  df[is.na(df[,i]), i] <- mean(df[,i], na.rm = TRUE)
+}
+options(warn=0)          
+unlist(lapply(df, function(x) any(is.na(x))))
+nrow(df)
+```
+
+
+<dl class=dl-horizontal>
+	<dt>Survived</dt>
+		<dd>FALSE</dd>
+	<dt>Pclass</dt>
+		<dd>FALSE</dd>
+	<dt>Name</dt>
+		<dd>FALSE</dd>
+	<dt>Sex</dt>
+		<dd>FALSE</dd>
+	<dt>Age</dt>
+		<dd>TRUE</dd>
+</dl>
+
+
+
+
+714
+
+
+
+<dl class=dl-horizontal>
+	<dt>Survived</dt>
+		<dd>FALSE</dd>
+	<dt>Pclass</dt>
+		<dd>FALSE</dd>
+	<dt>Name</dt>
+		<dd>FALSE</dd>
+	<dt>Sex</dt>
+		<dd>FALSE</dd>
+	<dt>Age</dt>
+		<dd>FALSE</dd>
+</dl>
+
+
+
+
+891
+
+
+Como podemos notar, solamente la columna **Age** presentaba **datos vacíos**. Además, la cantidad de registros que estamos trabajando tampoco es masiva, es decir, **tenemos un muestreo pequeño de datos (891 registros)**.
+
+Esto básicamente motiva con que no adoptaramos una aproximación posible en los casos de datos vacíos (NA):
+
+- **Eliminación de registros (filas) donde haya a ocurrencia de NAs**
+
+Como podemos ver en el dataset `df_no_NA`, quedaríamos simplemente con `714` filas para trabajar (particularmente he considerado poco), por lo tanto, he adoptado una aproximación distinta:
+
+- **Calcular un pormedio basado en la información de las otras filas para los casos donde hubiera un elemento vacío**
+
+Finalmente había un registro NA en la última línea del comando `head(df)` (*Moran, Mr. James*) veamos como ha quedado los datos de Age ahora:
+
+
+```R
+head(df)
+```
+
+
+<table>
+<thead><tr><th scope=col>Survived</th><th scope=col>Pclass</th><th scope=col>Name</th><th scope=col>Sex</th><th scope=col>Age</th></tr></thead>
+<tbody>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Braund, Mr. Owen Harris                            </td><td>male                                               </td><td>22.00000                                           </td></tr>
+	<tr><td>1                                                  </td><td>1                                                  </td><td>Cumings, Mrs. John Bradley (Florence Briggs Thayer)</td><td>female                                             </td><td>38.00000                                           </td></tr>
+	<tr><td>1                                                  </td><td>3                                                  </td><td>Heikkinen, Miss. Laina                             </td><td>female                                             </td><td>26.00000                                           </td></tr>
+	<tr><td>1                                                  </td><td>1                                                  </td><td>Futrelle, Mrs. Jacques Heath (Lily May Peel)       </td><td>female                                             </td><td>35.00000                                           </td></tr>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Allen, Mr. William Henry                           </td><td>male                                               </td><td>35.00000                                           </td></tr>
+	<tr><td>0                                                  </td><td>3                                                  </td><td>Moran, Mr. James                                   </td><td>male                                               </td><td>29.69912                                           </td></tr>
+</tbody>
+</table>
+
+
+
+Para cerrar el tema de los *Missing Values*, hay otras aproximaciones que no parecían adecuadas para el escenario, sin embargo añado para dejar claro que las he tenido en cuenta:
+
+- **Rellenar manualmente los valores que faltan**
+- **Rellenar con una constante global**
+- **Rellenar con un valor más probable (podría ser echo con una regresión, por ejemplo)**
+
+
 ### 3.2. Identificación y tratamiento de valores extremos
+
+La verdad es que, mismo antes de seguir con el analisis si hay o no valores extremos (*outliers*) queda evidente que hay pocas posibilidades de haber muchos problemas, dado que tenemos simplemente 3 columnas con valores numericos (siendo una de ellas, la columna de **Survived** que es precisamente la columna del *label* del dataset - o sea, ahí seguramente que no habrá problemas).
+
+
+```R
+sapply(df,class)
+```
+
+
+<dl class=dl-horizontal>
+	<dt>Survived</dt>
+		<dd>'numeric'</dd>
+	<dt>Pclass</dt>
+		<dd>'numeric'</dd>
+	<dt>Name</dt>
+		<dd>'factor'</dd>
+	<dt>Sex</dt>
+		<dd>'factor'</dd>
+	<dt>Age</dt>
+		<dd>'numeric'</dd>
+</dl>
+
+
+
+
+```R
+par(mfrow=c(2,2))
+for(i in 1:ncol(df)) {
+    if (is.numeric(df[,i])){
+        boxplot(df[,i], main = colnames(df)[i], width = 100, col="gray")
+    }
+}
+
+max(df$Age, na.rm = TRUE)
+min(df$Age, na.rm = TRUE)
+fivenum(df$Age)
+```
+
+
+80
+
+
+
+0.42
+
+
+
+<ol class=list-inline>
+	<li>0.42</li>
+	<li>22</li>
+	<li>29.6991176470588</li>
+	<li>35</li>
+	<li>80</li>
+</ol>
+
+
+
+
+![png](output_18_3.png)
+
+
+Con esto, hay valores que aparecen en los boxplots como *outliers* en **Age**, y es completamente factible que una persona en el Titanic tuviera `80` años (y también `0.4` años, en el caso de un bebé). 
+
+**Los outliers afectan especialmente a la media (medida poco robusta). Y cuando la muestra es pequeña como en nuestro, el efecto se nota aún más acentuado.**
+
+Como forma de tratamiento de valores extremos, una posible aproximación es la tecnica de *Binning* (discretización) que creo ser perfecta para la columna en cuestión.
+
+
+```R
+df$Age <- as.factor(ifelse(df$Age >= 21, "Adult", "Underage"))
+sapply(df,class)
+tail(df)
+```
+
+
+<dl class=dl-horizontal>
+	<dt>Survived</dt>
+		<dd>'numeric'</dd>
+	<dt>Pclass</dt>
+		<dd>'numeric'</dd>
+	<dt>Name</dt>
+		<dd>'factor'</dd>
+	<dt>Sex</dt>
+		<dd>'factor'</dd>
+	<dt>Age</dt>
+		<dd>'factor'</dd>
+</dl>
+
+
+
+
+<table>
+<thead><tr><th></th><th scope=col>Survived</th><th scope=col>Pclass</th><th scope=col>Name</th><th scope=col>Sex</th><th scope=col>Age</th></tr></thead>
+<tbody>
+	<tr><th scope=row>886</th><td>0                                       </td><td>3                                       </td><td>Rice, Mrs. William (Margaret Norton)    </td><td>female                                  </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>887</th><td>0                                       </td><td>2                                       </td><td>Montvila, Rev. Juozas                   </td><td>male                                    </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>888</th><td>1                                       </td><td>1                                       </td><td>Graham, Miss. Margaret Edith            </td><td>female                                  </td><td>Underage                                </td></tr>
+	<tr><th scope=row>889</th><td>0                                       </td><td>3                                       </td><td>Johnston, Miss. Catherine Helen "Carrie"</td><td>female                                  </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>890</th><td>1                                       </td><td>1                                       </td><td>Behr, Mr. Karl Howell                   </td><td>male                                    </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>891</th><td>0                                       </td><td>3                                       </td><td>Dooley, Mr. Patrick                     </td><td>male                                    </td><td>Adult                                   </td></tr>
+</tbody>
+</table>
+
+
+
+Explicando el enfoque: 
+
+Como en algunas ocasiones, la información tiene un poco de *ruido*, nos interesa reducir al máximo lo mismo y, para ello, una posible solución es discretizar. Así, una serie de valores son los representantes de la variable cuantitativa (en nuestro caso *Underage* y *Adult* son los representantes).
+
+Otras aproximaciones y tecnicas también podrían estar empleadas aquí, como *Regression* u *Outlier Analysis*, sin embargo, la que haría más sentido para lo que buscamos es si duda el *Binning*.
 
 ## 4. Análisis de los datos
 
