@@ -24,9 +24,7 @@ Aunque hubo algún elemento de suerte involucrado en sobrevivir al hundimiento, 
 Justamente, el problema que buscamos a contestar es precisamente esto: hacer el análisis de **¿qué tipos de personas podrían sobrevivir?**
 
 
-## 2. Integración y selección de los datos de interés a analizar
-
-Antes de empezar con la selección de los datos propiamente dicha, voy a buscar un poco más de información respeto al dataset.
+Aún hablando un poco sobre el dataset, vamos a mirar un poco más de información sobre el mismo:
 
 
 ```R
@@ -44,7 +42,7 @@ if (grepl(",", L)) print("File has an English format")
 df <- read.csv("train.csv")
 head(df)
 
-# Mirando los nombres de columnas del dataframe y los tipos de variables
+# Mirando los nombres de columnas del dataframe y los tipos de variables y informacion adicional
 print(paste("We are evaluating", nrow(df), "rows of code"))
 print("Column's names: ")
 colnames(df)
@@ -170,6 +168,8 @@ summary(df)
      (Other)    :186           
 
 
+## 2. Integración y selección de los datos de interés a analizar
+
 Ahora que tenemos un poco más de información sobre el dataset, detectamos que algunas de las columnas no aportan mucho para el tipo de conocimiento que necesitamos recolectar. Por ejemplo, el número del *ticket* de cada persona es bastante irrelevante para extraer un modelo y predecir si la persona ha sobrevivido o no. Dicho, con el intuito de obtener un modelo significativo, he elegido los siguientes atributos para el analisis:
 - *Survived*
 - *Pclass*
@@ -210,6 +210,8 @@ head(df)
 ```R
 # Como resultado del comando abajo, podemos ver que solamente Age tiene elementos NA
 unlist(lapply(df, function(x) any(is.na(x))))
+              
+sapply(df, function(x) sum(is.na(x)))
 
 # Abajo comentaré las aproximaciones posibles para el escenario y la adoptada              
 df_no_NA <- df[rowSums(is.na(df)) == 0,]
@@ -234,13 +236,29 @@ nrow(df)
 	<dt>Sex</dt>
 		<dd>FALSE</dd>
 	<dt>Age</dt>
-		<dd>TRUE</dd>
+		<dd>FALSE</dd>
 </dl>
 
 
 
 
-714
+<dl class=dl-horizontal>
+	<dt>Survived</dt>
+		<dd>0</dd>
+	<dt>Pclass</dt>
+		<dd>0</dd>
+	<dt>Name</dt>
+		<dd>0</dd>
+	<dt>Sex</dt>
+		<dd>0</dd>
+	<dt>Age</dt>
+		<dd>0</dd>
+</dl>
+
+
+
+
+891
 
 
 
@@ -418,9 +436,122 @@ Otras aproximaciones y tecnicas también podrían estar empleadas aquí, como *R
 
 ### 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar)
 
+
+```R
+# Agrupación por sexo
+df.male <- df[df$Sex == "male",] 
+df.female <- df[df$Sex == "female",] 
+
+# Por Edad
+df.adult <- df[df$Age == "Adult",] 
+df.underage <- df[df$Age == "Underage",] 
+
+# Por Cabina
+df.first_class <- df[df$Pclass == 1,] 
+df.second_class <- df[df$Pclass == 2,] 
+df.third_class <- df[df$Pclass == 3,]
+
+print(paste("Hombres: ", nrow(df.male)))
+print(paste("Mujeres: ", nrow(df.female)))
+print("------------------------------------------------")
+print(paste("Adultos: ", nrow(df.adult)))
+print(paste("No adultos: ", nrow(df.underage)))
+print("------------------------------------------------")
+print(paste("Primera clase: ", nrow(df.first_class)))
+print(paste("Segunda clase: ", nrow(df.second_class)))
+print(paste("Tercera clase: ", nrow(df.third_class)))
+```
+
+    [1] "Hombres:  577"
+    [1] "Mujeres:  314"
+    [1] "------------------------------------------------"
+    [1] "Adultos:  711"
+    [1] "No adultos:  180"
+    [1] "------------------------------------------------"
+    [1] "Primera clase:  216"
+    [1] "Segunda clase:  184"
+    [1] "Tercera clase:  491"
+
+
 ### 4.2. Comprobación de la normalidad y homogeneidad de la varianza
 
+
+```R
+#"The distribution of Y within each group is normally distributed." It's the same thing as Y|X and in this context, it's the same as saying the residuals are normally distributed.
+#DS <- summarize( group_by(data, Tipo), n=length(df), p.shapiro=shapiro.test(df)[[2]])
+#DS
+
+
+# H0: la muestra (de tamaño n) sigue una distribución normal
+# Se rechaza H0 si p value < alfa
+# Si se aplica Shapiro (en toda la muestra)
+
+alpha = 0.05
+
+ST_P <- shapiro.test(df$Pclass)
+ST_P
+
+ST_S <- shapiro.test(df$Survived)
+ST_S
+
+pvalue_P <- ST_P[[2]]
+pvalue_S <- ST_S[[2]]
+pvalue_P
+pvalue_S
+```
+
+
+    
+    	Shapiro-Wilk normality test
+    
+    data:  df$Pclass
+    W = 0.71833, p-value < 2.2e-16
+
+
+
+
+    
+    	Shapiro-Wilk normality test
+    
+    data:  df$Survived
+    W = 0.61666, p-value < 2.2e-16
+
+
+
+
+3.39303101282384e-36
+
+
+
+1.79425301229117e-40
+
+
+En el test de Shapiro-Wilk, cuando P r(D) ≥ α entonces se acepta la hipótesis nula, existe
+normalidad. El valor p del test de Shapiro ha dado para Pclass y Survived respectivamente 3.39 y 1.79. Por tanto, no se rechaza la hipótesis nula de normalidad. Asumimos que la muestra sigue una distribución normal.
+
+
+```R
+
+fligner.test(Survived ~ Pclass, data = df)
+```
+
+
+    
+    	Fligner-Killeen test of homogeneity of variances
+    
+    data:  Survived by Pclass
+    Fligner-Killeen:med chi-squared = 35.766, df = 2, p-value = 1.712e-08
+
+
+
+Dado que obtuvimos *p-value* de 1.71 o sea, superior a α, aceptamos la hipótesis de que las varianzas son homogéneas.
+
 ### 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.
+
+
+```R
+
+```
 
 ## 5. Representación de los resultados a partir de tablas y gráficas
 
