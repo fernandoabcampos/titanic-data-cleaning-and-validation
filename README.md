@@ -236,7 +236,7 @@ nrow(df)
 	<dt>Sex</dt>
 		<dd>FALSE</dd>
 	<dt>Age</dt>
-		<dd>FALSE</dd>
+		<dd>TRUE</dd>
 </dl>
 
 
@@ -252,13 +252,13 @@ nrow(df)
 	<dt>Sex</dt>
 		<dd>0</dd>
 	<dt>Age</dt>
-		<dd>0</dd>
+		<dd>177</dd>
 </dl>
 
 
 
 
-891
+714
 
 
 
@@ -388,9 +388,12 @@ Con esto, hay valores que aparecen en los boxplots como *outliers* en **Age**, y
 
 Como forma de tratamiento de valores extremos, una posible aproximación es la tecnica de *Binning* (discretización) que creo ser perfecta para la columna en cuestión.
 
+Otro punto que parece importante tratar es que **Survived** no es un valor numerico, sino un sobrevivió o no (Yes o No) por lo cual también voy a aplicar Binning en la columna.
+
 
 ```R
 df$Age <- as.factor(ifelse(df$Age >= 21, "Adult", "Underage"))
+df$Survived <- as.factor(ifelse(df$Survived == 1, "Yes", "No"))
 sapply(df,class)
 tail(df)
 ```
@@ -398,7 +401,7 @@ tail(df)
 
 <dl class=dl-horizontal>
 	<dt>Survived</dt>
-		<dd>'numeric'</dd>
+		<dd>'factor'</dd>
 	<dt>Pclass</dt>
 		<dd>'numeric'</dd>
 	<dt>Name</dt>
@@ -415,12 +418,12 @@ tail(df)
 <table>
 <thead><tr><th></th><th scope=col>Survived</th><th scope=col>Pclass</th><th scope=col>Name</th><th scope=col>Sex</th><th scope=col>Age</th></tr></thead>
 <tbody>
-	<tr><th scope=row>886</th><td>0                                       </td><td>3                                       </td><td>Rice, Mrs. William (Margaret Norton)    </td><td>female                                  </td><td>Adult                                   </td></tr>
-	<tr><th scope=row>887</th><td>0                                       </td><td>2                                       </td><td>Montvila, Rev. Juozas                   </td><td>male                                    </td><td>Adult                                   </td></tr>
-	<tr><th scope=row>888</th><td>1                                       </td><td>1                                       </td><td>Graham, Miss. Margaret Edith            </td><td>female                                  </td><td>Underage                                </td></tr>
-	<tr><th scope=row>889</th><td>0                                       </td><td>3                                       </td><td>Johnston, Miss. Catherine Helen "Carrie"</td><td>female                                  </td><td>Adult                                   </td></tr>
-	<tr><th scope=row>890</th><td>1                                       </td><td>1                                       </td><td>Behr, Mr. Karl Howell                   </td><td>male                                    </td><td>Adult                                   </td></tr>
-	<tr><th scope=row>891</th><td>0                                       </td><td>3                                       </td><td>Dooley, Mr. Patrick                     </td><td>male                                    </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>886</th><td>No                                      </td><td>3                                       </td><td>Rice, Mrs. William (Margaret Norton)    </td><td>female                                  </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>887</th><td>No                                      </td><td>2                                       </td><td>Montvila, Rev. Juozas                   </td><td>male                                    </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>888</th><td>Yes                                     </td><td>1                                       </td><td>Graham, Miss. Margaret Edith            </td><td>female                                  </td><td>Underage                                </td></tr>
+	<tr><th scope=row>889</th><td>No                                      </td><td>3                                       </td><td>Johnston, Miss. Catherine Helen "Carrie"</td><td>female                                  </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>890</th><td>Yes                                     </td><td>1                                       </td><td>Behr, Mr. Karl Howell                   </td><td>male                                    </td><td>Adult                                   </td></tr>
+	<tr><th scope=row>891</th><td>No                                      </td><td>3                                       </td><td>Dooley, Mr. Patrick                     </td><td>male                                    </td><td>Adult                                   </td></tr>
 </tbody>
 </table>
 
@@ -477,27 +480,16 @@ print(paste("Tercera clase: ", nrow(df.third_class)))
 
 
 ```R
-#"The distribution of Y within each group is normally distributed." It's the same thing as Y|X and in this context, it's the same as saying the residuals are normally distributed.
-#DS <- summarize( group_by(data, Tipo), n=length(df), p.shapiro=shapiro.test(df)[[2]])
-#DS
-
 
 # H0: la muestra (de tamaño n) sigue una distribución normal
 # Se rechaza H0 si p value < alfa
 # Si se aplica Shapiro (en toda la muestra)
 
-alpha = 0.05
-
 ST_P <- shapiro.test(df$Pclass)
 ST_P
 
-ST_S <- shapiro.test(df$Survived)
-ST_S
-
 pvalue_P <- ST_P[[2]]
-pvalue_S <- ST_S[[2]]
 pvalue_P
-pvalue_S
 ```
 
 
@@ -510,54 +502,194 @@ pvalue_S
 
 
 
-    
-    	Shapiro-Wilk normality test
-    
-    data:  df$Survived
-    W = 0.61666, p-value < 2.2e-16
-
-
-
-
 3.39303101282384e-36
 
 
-
-1.79425301229117e-40
-
-
 En el test de Shapiro-Wilk, cuando P r(D) ≥ α entonces se acepta la hipótesis nula, existe
-normalidad. El valor p del test de Shapiro ha dado para Pclass y Survived respectivamente 3.39 y 1.79. Por tanto, no se rechaza la hipótesis nula de normalidad. Asumimos que la muestra sigue una distribución normal.
-
-
-```R
-
-fligner.test(Survived ~ Pclass, data = df)
-```
-
-
-    
-    	Fligner-Killeen test of homogeneity of variances
-    
-    data:  Survived by Pclass
-    Fligner-Killeen:med chi-squared = 35.766, df = 2, p-value = 1.712e-08
-
-
-
-Dado que obtuvimos *p-value* de 1.71 o sea, superior a α, aceptamos la hipótesis de que las varianzas son homogéneas.
+normalidad. El valor p del test de Shapiro ha dado para Pclass 3.39. Por tanto, no se rechaza la hipótesis nula de normalidad. Asumimos que la muestra sigue una distribución normal.
 
 ### 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.
 
 
 ```R
+# Obtain train set (80%) and test set (20%)
+lines  <- nrow(df)
 
+ntrain <- round(lines * 0.8)      # number of training examples
+tindex <- sample(lines, ntrain)   # indices of training samples (random)
+xtrain <- df[tindex,2:5]          # data are in columns 2:6 - "Pclass", "Sex", "Age" (nombre va a ser eliminado abajo)
+xtest  <- df[-tindex,2:5]         # data are in columns 2:6 - "Pclass", "Sex", "Age" (nombre va a ser eliminado abajo)
+ytrain <- df[tindex,1]            # labels are in column 4 - "SURVIVED"
+ytest  <- df[-tindex,1]           # labels are in column 4 - "SURVIVED"
+
+xtrain$Name <- NULL
+xtest$Name <- NULL
+
+summary(xtrain)
+summary(xtest)
+
+model_titanic <- C50::C5.0(xtrain, ytrain)
+summary(model_titanic)
 ```
 
+
+         Pclass          Sex            Age     
+     Min.   :1.000   female:255   Adult   :568  
+     1st Qu.:2.000   male  :458   Underage:145  
+     Median :3.000                              
+     Mean   :2.331                              
+     3rd Qu.:3.000                              
+     Max.   :3.000                              
+
+
+
+         Pclass          Sex            Age     
+     Min.   :1.000   female: 59   Adult   :143  
+     1st Qu.:1.000   male  :119   Underage: 35  
+     Median :3.000                              
+     Mean   :2.219                              
+     3rd Qu.:3.000                              
+     Max.   :3.000                              
+
+
+
+    
+    Call:
+    C5.0.default(x = xtrain, y = ytrain)
+    
+    
+    C5.0 [Release 2.07 GPL Edition]  	Sat Dec 29 20:12:48 2018
+    -------------------------------
+    
+    Class specified by attribute `outcome'
+    
+    Read 713 cases (4 attributes) from undefined.data
+    
+    Decision tree:
+    
+    Sex = female: Yes (255/67)
+    Sex = male: No (458/82)
+    
+    
+    Evaluation on training data (713 cases):
+    
+    	    Decision Tree   
+    	  ----------------  
+    	  Size      Errors  
+    
+    	     2  149(20.9%)   <<
+    
+    
+    	   (a)   (b)    <-classified as
+    	  ----  ----
+    	   376    67    (a): class No
+    	    82   188    (b): class Yes
+    
+    
+    	Attribute usage:
+    
+    	100.00%	Sex
+    
+    
+    Time: 0.0 secs
+
+
+
 ## 5. Representación de los resultados a partir de tablas y gráficas
+
+
+```R
+# MOSTRAR EL ARBOL OBTENIDO
+plot(model_titanic)
+
+estimated_ytest <- predict(model_titanic, xtest, type="class")
+accuracy <- sum(ytest==estimated_ytest)/length(ytest)
+error <- 1- accuracy
+print(paste("La accuracy del modelo es: ", accuracy))
+print(paste("El error del modelo es: ", error))
+
+# Mirando las reglas del modelo
+mod <- C50::C5.0(ytrain ~ ., data = xtrain, rules = TRUE)
+summary(mod)
+cat(mod$rules)
+```
+
+    [1] "La accuracy del modelo es:  0.769662921348315"
+    [1] "El error del modelo es:  0.230337078651685"
+
+
+
+    
+    Call:
+    C5.0.formula(formula = ytrain ~ ., data = xtrain, rules = TRUE)
+    
+    
+    C5.0 [Release 2.07 GPL Edition]  	Sat Dec 29 20:17:55 2018
+    -------------------------------
+    
+    Class specified by attribute `outcome'
+    
+    Read 713 cases (4 attributes) from undefined.data
+    
+    Rules:
+    
+    Rule 1: (458/82, lift 1.3)
+    	Sex = male
+    	->  class No  [0.820]
+    
+    Rule 2: (255/67, lift 1.9)
+    	Sex = female
+    	->  class Yes  [0.735]
+    
+    Default class: No
+    
+    
+    Evaluation on training data (713 cases):
+    
+    	        Rules     
+    	  ----------------
+    	    No      Errors
+    
+    	     2  149(20.9%)   <<
+    
+    
+    	   (a)   (b)    <-classified as
+    	  ----  ----
+    	   376    67    (a): class No
+    	    82   188    (b): class Yes
+    
+    
+    	Attribute usage:
+    
+    	100.00%	Sex
+    
+    
+    Time: 0.0 secs
+
+
+
+    id="See5/C5.0 2.07 GPL Edition 2018-12-29"
+    entries="1"
+    rules="2" default="No"
+    conds="1" cover="458" ok="376" lift="1.31907" class="No"
+    type="1" att="Sex" val="male"
+    conds="1" cover="255" ok="188" lift="1.94202" class="Yes"
+    type="1" att="Sex" val="female"
+
+
+
+![png](output_31_3.png)
+
 
 ## 6. Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
 
 
+Analizando nuestro gráfico de árbol, queda claro que independientemente de la clase del pasajero, si su sexo fuera "**Hombre**", su capacidad de sobrevivir era  más pequeña que de una mujer (probabilidad de los hombres como un todo alrededor de 20%).
+
+Es importante resaltar que al elegir las variables, la variable **AGE** y **PClass** han sido pasadas como parámetro y posiblemente el paquete C50 ha procedido con un algoritmo de poda, porque siquiera las encontramos entre las variables y las reglas.
+
 ## 7. Código
+
+Como he optado por hacer directamente en un Jupyter notebook, todos las partes del código estan presentes en este documento, sin embargo, en el repositorio de Github también es posible encontrar todos los archivos utilizados durante la práctica.
 
 
