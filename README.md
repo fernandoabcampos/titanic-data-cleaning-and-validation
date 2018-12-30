@@ -14,10 +14,42 @@
 <center><h1>Práctica 2 - Limpieza y validación de los datos</h1></center>
 
 
-## 1. Dataset
+# Contenidos
+
+1. [Dataset](#data1)
+
+2. [Integración y selección de los datos de interés a analizar.](#data2)
+
+3. [Limpieza de los datos.](#data3)
+    
+    3.1. [¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?](#data31)
+    
+    3.2. [Identificación y tratamiento de valores extremos.](#data32)
+    
+    
+4. [Análisis de los datos.](#data4)
+
+    4.1. [Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar).](#data41)
+    
+    4.2. [Comprobación de la normalidad y homogeneidad de la varianza.](#data42)
+    
+    4.3. [Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.](#data43)
+    
+    
+5. [Representación de los resultados a partir de tablas y gráficas.](#data5)
+
+6. [Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?](#data6)
+
+7. [Código](#data7)
+
+## 1. Dataset <a name="data1"></a>
 *Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende responder?*
 
-He elegido el dataset ["**Titanic: Machine Learning from Disaster**" de Kagle](https://www.kaggle.com/c/titanic/overview). La información presente en el dataset són datos sobre cada pasajero del famoso naufragio, si la persona sobrevivió o no, su sexo, tipo de cabina que estaba, entre otros.
+He elegido el dataset ["**Titanic: Machine Learning from Disaster**" de Kagle](https://www.kaggle.com/c/titanic/overview). 
+<img src="titanic.jpg" alt="Titanic" style="width: 700px;"/>
+<center>Figura 1: Titanic</center>
+<p></p>
+La información presente en el dataset són datos sobre cada pasajero del famoso naufragio, si la persona sobrevivió o no, su sexo, tipo de cabina que estaba, entre otros.
 
 Aunque hubo algún elemento de suerte involucrado en sobrevivir al hundimiento, algunos grupos de personas tenían más probabilidades de sobrevivir que otros, como las mujeres, los niños y la clase alta.
 
@@ -168,9 +200,9 @@ summary(df)
      (Other)    :186           
 
 
-## 2. Integración y selección de los datos de interés a analizar
+## 2. Integración y selección de los datos de interés a analizar<a name="data2"></a>
 
-Ahora que tenemos un poco más de información sobre el dataset, detectamos que algunas de las columnas no aportan mucho para el tipo de conocimiento que necesitamos recolectar. Por ejemplo, el número del *ticket* de cada persona es bastante irrelevante para extraer un modelo y predecir si la persona ha sobrevivido o no. Dicho, con el intuito de obtener un modelo significativo, he elegido los siguientes atributos para el analisis:
+Ahora que tenemos un poco más de información sobre el dataset, detectamos que algunas de las columnas no aportan mucho para el tipo de conocimiento que necesitamos recolectar. Por ejemplo, el número del *ticket* de cada persona es bastante irrelevante para extraer un modelo y predecir si la persona ha sobrevivido o no. Dicho, con el intuito de obtener un modelo significativo, he elegido los siguientes atributos para el análisis:
 - *Survived*
 - *Pclass*
 - *Name*
@@ -179,7 +211,7 @@ Ahora que tenemos un poco más de información sobre el dataset, detectamos que 
 
 Queda claro que el atributo **Name** tampoco es relevante, pero mantuve por si acaso necesito explicar o hacer alguna comparación de pasajeros (será más sencillo identificar las personas por sus nombres). 
 
-Definidos los atributos, antes de seguir para el próximo ejercício, hago la selección de los datos que vamos a trabajar abajo.
+Definidos los atributos, antes de seguir para el próximo ejercicio, hago la selección de los datos que vamos a trabajar abajo.
 
 
 ```R
@@ -202,9 +234,9 @@ head(df)
 
 
 
-## 3. Limpieza de los datos
+## 3. Limpieza de los datos<a name="data3"></a>
 
-### 3.1. ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?
+### 3.1. ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno de estos casos?<a name="data31"></a>
 
 
 ```R
@@ -287,9 +319,9 @@ Esto básicamente motiva con que no adoptaramos una aproximación posible en los
 
 - **Eliminación de registros (filas) donde haya a ocurrencia de NAs**
 
-Como podemos ver en el dataset `df_no_NA`, quedaríamos simplemente con `714` filas para trabajar (particularmente he considerado poco), por lo tanto, he adoptado una aproximación distinta:
+Como podemos ver en el dataset `df_no_NA`, quedamos simplemente con `714` filas para trabajar (particularmente he considerado poco), por lo tanto, he adoptado una aproximación distinta:
 
-- **Calcular un pormedio basado en la información de las otras filas para los casos donde hubiera un elemento vacío**
+- **Calcular un promedio basado en la información de las otras filas para los casos donde hubiera un elemento vacío**
 
 Finalmente había un registro NA en la última línea del comando `head(df)` (*Moran, Mr. James*) veamos como ha quedado los datos de Age ahora:
 
@@ -320,9 +352,9 @@ Para cerrar el tema de los *Missing Values*, hay otras aproximaciones que no par
 - **Rellenar con un valor más probable (podría ser echo con una regresión, por ejemplo)**
 
 
-### 3.2. Identificación y tratamiento de valores extremos
+### 3.2. Identificación y tratamiento de valores extremos<a name="data32"></a>
 
-La verdad es que, mismo antes de seguir con el analisis si hay o no valores extremos (*outliers*) queda evidente que hay pocas posibilidades de haber muchos problemas, dado que tenemos simplemente 3 columnas con valores numericos (siendo una de ellas, la columna de **Survived** que es precisamente la columna del *label* del dataset - o sea, ahí seguramente que no habrá problemas).
+La verdad es que, mismo antes de seguir con el análisis si hay o no valores extremos (*outliers*) queda evidente que hay pocas posibilidades de haber muchos problemas, dado que tenemos simplemente 3 columnas con valores numéricos (siendo una de ellas, la columna de **Survived** que es precisamente la columna del *label* del dataset / luego arreglaremos para ser categórica - o sea, ahí seguramente que no habrá problemas).
 
 
 ```R
@@ -379,7 +411,7 @@ fivenum(df$Age)
 
 
 
-![png](output_18_3.png)
+![png](output_19_3.png)
 
 
 Con esto, hay valores que aparecen en los boxplots como *outliers* en **Age**, y es completamente factible que una persona en el Titanic tuviera `80` años (y también `0.4` años, en el caso de un bebé). 
@@ -435,9 +467,9 @@ Como en algunas ocasiones, la información tiene un poco de *ruido*, nos interes
 
 Otras aproximaciones y tecnicas también podrían estar empleadas aquí, como *Regression* u *Outlier Analysis*, sin embargo, la que haría más sentido para lo que buscamos es si duda el *Binning*.
 
-## 4. Análisis de los datos
+## 4. Análisis de los datos<a name="data4"></a>
 
-### 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar)
+### 4.1. Selección de los grupos de datos que se quieren analizar/comparar (planificación de los análisis a aplicar)<a name="data41"></a>
 
 
 ```R
@@ -476,13 +508,15 @@ print(paste("Tercera clase: ", nrow(df.third_class)))
     [1] "Tercera clase:  491"
 
 
-### 4.2. Comprobación de la normalidad y homogeneidad de la varianza
+### 4.2. Comprobación de la normalidad y homogeneidad de la varianza<a name="data42"></a>
+
+Honestamente, con el dataset y las informaciones que hemos elegido para trabajar (grande parte de ellas son categóricas), creo que las comprobaciones de varianza que se busca en el item 4.2 no se aplican para el escenario. Sin embargo, haré aún así algunas comprobaciones con el único atributo numérico y continuo que queda, simulando lo que se busca en el ítem.
 
 
 ```R
 
 # H0: la muestra (de tamaño n) sigue una distribución normal
-# Se rechaza H0 si p value < alfa
+# Se rechaza H0 si p value < alfa - ejemplo: alfa = 0.05
 # Si se aplica Shapiro (en toda la muestra)
 
 ST_P <- shapiro.test(df$Pclass)
@@ -508,7 +542,7 @@ pvalue_P
 En el test de Shapiro-Wilk, cuando P r(D) ≥ α entonces se acepta la hipótesis nula, existe
 normalidad. El valor p del test de Shapiro ha dado para Pclass 3.39. Por tanto, no se rechaza la hipótesis nula de normalidad. Asumimos que la muestra sigue una distribución normal.
 
-### 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.
+### 4.3. Aplicación de pruebas estadísticas para comparar los grupos de datos. En función de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis, correlaciones, regresiones, etc.<a name="data43"></a>
 
 
 ```R
@@ -595,7 +629,7 @@ summary(model_titanic)
 
 
 
-## 5. Representación de los resultados a partir de tablas y gráficas
+## 5. Representación de los resultados a partir de tablas y gráficas<a name="data5"></a>
 
 
 ```R
@@ -678,17 +712,17 @@ cat(mod$rules)
 
 
 
-![png](output_31_3.png)
+![png](output_33_3.png)
 
 
-## 6. Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?
+## 6. Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las conclusiones? ¿Los resultados permiten responder al problema?<a name="data6"></a>
 
 
 Analizando nuestro gráfico de árbol, queda claro que independientemente de la clase del pasajero, si su sexo fuera "**Hombre**", su capacidad de sobrevivir era  más pequeña que de una mujer (probabilidad de los hombres como un todo alrededor de 20%).
 
 Es importante resaltar que al elegir las variables, la variable **AGE** y **PClass** han sido pasadas como parámetro y posiblemente el paquete C50 ha procedido con un algoritmo de poda, porque siquiera las encontramos entre las variables y las reglas.
 
-## 7. Código
+## 7. Código<a name="data7"></a>
 
 Como he optado por hacer directamente en un Jupyter notebook, todos las partes del código estan presentes en este documento, sin embargo, en el repositorio de Github también es posible encontrar todos los archivos utilizados durante la práctica.
 
